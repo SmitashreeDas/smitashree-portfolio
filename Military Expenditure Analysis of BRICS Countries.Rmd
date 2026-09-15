@@ -1,0 +1,304 @@
+---
+title: "Military"
+output: html_document
+date: "2026-08-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Military Expenditure as a Share of GDP in BRICS Countries
+## Introduction
+
+This analysis examines military expenditure as a percentage of GDP across the BRICS countries. Military expenditure as a share of GDP indicates the proportion of a country's economic output devoted to military spending.
+
+The analysis focuses on the 11 current BRICS member countries: Brazil, Russia, India, China, South Africa, Egypt, Ethiopia, Iran, Saudi Arabia, United Arab Emirates, and Indonesia.
+
+The analysis examines trends over time and compares military expenditure across BRICS countries FROM 1992 TO 2024 .
+
+## 1. Loading the Data
+```{r}
+# Read the military expenditure CSV file
+military_in <- read.csv("C:\\Users\\Labcomp93\\Downloads\\military-spending-as-a-share-of-gdp-sipri.csv")
+
+# Examine the structure of the dataset
+str(military_in)
+
+# Display the variable names
+names(military_in)
+```
+## 2. Understanding and Renaming Variables
+
+```{r}
+# Rename Entity as Country
+names(military_in)[1] <- "Country"
+
+# Rename the military expenditure variable
+names(military_in)[4] <-"Military_GDP"
+
+# Check the renamed variables
+names(military_in)
+```
+The variable `Country` identifies the country, `Year` identifies the year of observation, and `Military_GDP` represents military expenditure as a percentage of GDP.
+
+A higher value indicates that a larger proportion of the country's GDP is devoted to military expenditure.
+
+## 3. Selecting the BRICS Countries
+
+
+```{r}
+# List of the 11 current BRICS member countries
+sel_country <- c(
+  "Brazil",
+  "Russia",
+  "India",
+  "China",
+  "South Africa",
+  "Egypt",
+  "Ethiopia",
+  "Iran",
+  "Saudi Arabia",
+  "United Arab Emirates",
+  "Indonesia"
+)
+
+# Select only the BRICS countries
+temp_data <- military_in[
+  military_in$Country %in% sel_country,
+]
+
+# Check selected countries
+unique(temp_data$Country)
+
+```
+
+## 4. Selecting the Study Period
+
+```{r}
+# Select observations from 1992 to 2024
+temp_data <- subset(
+  temp_data,
+  Year >=1992 & Year <= 2024)
+```
+
+The analysis uses data from 1992 to 2024.The year 2024 is used as the latest comparable year in the selected data.
+
+## 5. Trends in Military Expenditure Over Time
+
+```{r}
+library(ggplot2)
+
+ggplot(
+  temp_data,
+  aes(
+    x = Year,
+    y = Military_GDP,
+    color = Country
+  )
+) +
+  geom_line(linewidth = 1) +
+  labs(
+    title = "Military Expenditure as a Share of GDP: BRICS Countries",
+    x = "Year",
+    y = "Military expenditure (% of GDP)",
+    color = "Country"
+  ) +
+  theme_bw()
+```
+Russia and Saudi Arabia consistently show higher military burdens than most other countries. The sharp increase in Russia in the later period is closely associated with the country’s heightened security expenditure following Russia's invasion of  Ukraine . China, despite its large absolute military spending, maintains a relatively lower GDP share because its defence expenditure has grown alongside its much larger economy.
+## 6. Military Expenditure in 1992
+
+```{r}
+# Select data for 1992
+temp_data_92 <- subset(
+  temp_data,
+  Year == 1992
+)
+
+# Sort by military expenditure
+temp_data_92 <- temp_data_92[
+  order(temp_data_92$Military_GDP),
+]
+
+temp_data_92
+```
+
+### 6.1 Ranking of BRICS Countries in 1992
+
+```{r}
+ggplot(
+  temp_data_92,
+  aes(
+    x = reorder(Country, Military_GDP),
+    y = Military_GDP
+  )
+) +
+  geom_bar(
+    stat = "identity",
+    width = 0.5,fill="steelblue"
+  ) +
+  theme_bw() +
+  labs(
+    title = "Military Expenditure as % of GDP (1992)",
+    x = "Country",
+    y = "Military expenditure (% of GDP)"
+  )
+```
+Saudi Arabia recorded an exceptionally high military burden of around 11.3% of GDP in 1992, reflecting the heightened security concerns following the Gulf War. Russia also had a relatively high share during the post-Soviet transition, while countries such as Indonesia and Brazil allocated a much smaller proportion of GDP to defence.
+
+## 7. Military Expenditure in 2024
+
+```{r}
+# Select data for 2024
+temp_data_24 <- subset(
+  temp_data,
+  Year == 2024
+)
+
+# Sort by military expenditure
+temp_data_24 <- temp_data_24[
+  order(temp_data_24$Military_GDP),
+]
+
+temp_data_24
+```
+
+
+### 7.1 Ranking of BRICS Countries in 2024
+```{r}
+ggplot(
+  temp_data_24,
+  aes(
+    x = reorder(Country, Military_GDP),
+    y = Military_GDP
+  )
+) +
+  geom_bar(
+    stat = "identity",
+    width = 0.5,fill="darkorange"
+  ) +
+  theme_bw() +
+  labs(
+    title = "Military Expenditure as % of GDP (2024)",
+    x = "Country",
+    y = "Military expenditure (% of GDP)"
+  )
+```
+Russia had the highest military burden in 2024 at around 6.9% of GDP, reflecting the substantial fiscal demands of the war in Ukraine since 2022. Saudi Arabia remained close behind at around 6.4%, while China remained below 2% despite having very high absolute defence expenditure.
+## 8. Comparison of Military Expenditure: 1992 and 2024
+
+```{r}
+# Select observations for 1992 and 2024
+temp_data_compare <- subset(
+  temp_data,
+  Year %in% c(1992, 2024)
+)
+
+# Convert Year to a factor
+temp_data_compare$Year <- factor(
+  temp_data_compare$Year
+)
+
+ggplot(
+  temp_data_compare,
+  aes(
+    x = reorder(Country, Military_GDP),
+    y = Military_GDP,
+    fill = Year
+  )
+) +
+  geom_bar(
+    position = "dodge",
+    stat = "identity"
+  ) +  scale_fill_manual(
+    values = c(
+      "1992" = "steelblue",
+      "2024" = "darkorange"
+    ))+
+  theme_bw() +
+  labs(
+    title = "Military Expenditure as % of GDP: 1992 vs 2024",
+    x = "Country",
+    y = "Military expenditure (% of GDP)",
+    fill = "Year"
+  )
+```
+The comparison shows a major shift in the countries carrying the highest military burden: Saudi Arabia was the clear outlier in 1992, whereas Russia became the highest in 2024. China’s lower GDP share in 2024 should not be interpreted as low military spending, since its large economic base allows substantial defence expenditure without requiring a very high share of GDP.
+
+## 9. Measuring Inequality in Military Burden
+```{r}
+# Install package once if required
+install.packages("ineq")
+
+# Load package
+library(ineq)
+
+# Gini coefficient for 1992
+gini_1992 <- Gini(temp_data_92$Military_GDP)
+
+# Gini coefficient for 2024
+gini_2024 <- Gini(temp_data_24$Military_GDP)
+
+gini_1992
+gini_2024
+```
+The increase in the Gini coefficient from approximately 0.34 to 0.47 indicates that military burden became more unevenly distributed across the countries. By 2024, Russia and Saudi Arabia were substantially above most of the other countries, driving this greater inequality.
+
+```{r}
+library(ineq)
+
+L_1992 <- Lc(temp_data_92$Military_GDP)
+
+plot(
+  L_1992,
+  main = "Lorenz Curve of Military Burden - BRICS, 1992",
+  xlab = "Cumulative share of countries",
+  ylab = "Cumulative share of military burden",col="steelblue"
+)
+```
+The deviation from the equality line is mainly influenced by Saudi Arabia’s exceptionally high military burden in 1992. This shows that the distribution was already uneven, largely because of differences in geopolitical and defence priorities.
+
+#Lorenz curve 2024
+```{r}
+L_2024 <- Lc(temp_data_24$Military_GDP)
+
+plot(
+  L_2024,
+  main = "Lorenz Curve of Military Burden - BRICS, 2024",
+  xlab = "Cumulative share of countries",
+  ylab = "Cumulative share of military burden",
+  col = "darkorange",
+  lwd = 3
+)
+```
+The larger deviation from the equality line in 2024 reflects the stronger concentration of military burden among a few countries, particularly Russia and Saudi Arabia. This is consistent with the higher Gini coefficient observed for 2024.
+
+#Comparison
+
+```{r}
+L_1992 <- Lc(temp_data_92$Military_GDP)
+L_2024 <- Lc(temp_data_24$Military_GDP)
+
+plot(
+  L_1992,
+  main = "Lorenz Curve of Military Burden: BRICS",
+  xlab = "Cumulative share of countries",
+  ylab = "Cumulative share of military burden",
+  col = "steelblue",
+  lwd = 3
+)
+
+lines(
+  L_2024,
+  col = "darkorange",
+  lwd = 3
+)
+
+legend(
+  "topleft",
+  legend = c("1992", "2024"),
+  col = c("steelblue", "darkorange"),
+  lwd = 3
+)
+```
+The 2024 curve lies farther from the equality line than the 1992 curve, confirming that the distribution of military burden became more unequal. The main change is the emergence of Russia as a major high-burden country alongside Saudi Arabia.

@@ -1,0 +1,528 @@
+/* General */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f5f7fa;
+    color: #222;
+    line-height: 1.6;
+}
+
+
+/* Navigation */
+
+nav {
+    background-color: #1f2937;
+    padding: 20px;
+    text-align: center;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 12px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+nav a:hover {
+    color: #93c5fd;
+}
+
+
+/* Home Hero Section */
+
+.hero {
+    min-height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.hero-text {
+    max-width: 850px;
+}
+
+.intro {
+    color: #1f4b7a;
+    font-weight: bold;
+    letter-spacing: 3px;
+    font-size: 15px;
+}
+
+.hero h1 {
+    font-size: 60px;
+    margin: 10px 0;
+    color: #111827;
+}
+
+.hero h2 {
+    font-size: 25px;
+    color: #1f4b7a;
+    margin-bottom: 25px;
+}
+
+.description {
+    font-size: 18px;
+    max-width: 700px;
+    margin: 0 auto 30px;
+}
+
+
+/* Buttons */
+
+.buttons {
+    margin-top: 25px;
+}
+
+.button {
+    display: inline-block;
+    background-color: #1f4b7a;
+    color: white;
+    text-decoration: none;
+    padding: 13px 25px;
+    border-radius: 6px;
+    margin: 8px;
+    font-weight: bold;
+}
+
+.button:hover {
+    background-color: #163654;
+    text-decoration: none;
+}
+
+.button.secondary {
+    background-color: transparent;
+    color: #1f4b7a;
+    border: 2px solid #1f4b7a;
+}
+
+.button.secondary:hover {
+    background-color: #1f4b7a;
+    color: white;
+}
+
+
+/* Other Pages */
+
+body > h1,
+body > h2,
+body > p {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body > h1 {
+    margin-top: 50px;
+    font-size: 40px;
+}
+
+body > h2 {
+    margin-top: 30px;
+    color: #1f4b7a;
+}
+
+body > p {
+    font-size: 17px;
+}
+/* About Page */
+
+.page-section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 70px 25px;
+}
+
+.section-label {
+    color: #1f4b7a;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+}
+
+.page-section h1 {
+    font-size: 45px;
+    margin-top: 0;
+    margin-bottom: 35px;
+}
+
+.about-card {
+    background-color: white;
+    padding: 35px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.about-card p {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+/* Profile Photo */
+
+.profile-photo {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    margin: 0 auto 30px;
+    border: 5px solid #e5e7eb;
+}
+/* Education Cards */
+
+.education-card {
+    background-color: white;
+    padding: 30px;
+    margin-bottom: 25px;
+    border-radius: 12px;
+    border-left: 5px solid #1f4b7a;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.education-card h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #1f4b7a;
+}
+
+.education-card h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.education-card p {
+    margin: 5px 0;
+}
+/* Skills */
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.skill-card {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s;
+}
+
+.skill-card:hover {
+    transform: translateY(-5px);
+}
+
+.skill-card h2 {
+    margin: 0 0 8px;
+    color: #1f4b7a;
+    font-size: 21px;
+}
+
+.skill-card p {
+    margin: 0;
+    font-size: 15px;
+}
+
+.sub-heading {
+    margin-top: 55px !important;
+}
+/* Experience */
+
+.experience-card {
+    background-color: white;
+    padding: 30px;
+    margin-bottom: 25px;
+    border-radius: 12px;
+    border-left: 5px solid #1f4b7a;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.experience-card h2 {
+    margin-top: 0;
+    color: #1f4b7a;
+}
+
+.experience-date {
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 15px;
+}
+/* Projects */
+
+.project-card {
+    background-color: white;
+    padding: 30px;
+    margin-bottom: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border-top: 5px solid #1f4b7a;
+}
+
+.project-card h2 {
+    margin-top: 0;
+    color: #1f4b7a;
+    font-size: 23px;
+}
+
+.project-card p {
+    font-size: 17px;
+}
+
+.project-year {
+    font-weight: bold;
+    color: #555;
+}
+
+.project-tools {
+    font-size: 15px !important;
+    font-weight: bold;
+    color: #1f4b7a;
+    margin-top: 20px;
+}
+.project-card a {
+    display: inline-block;
+    margin-top: 10px;
+    color: #1f4b7a;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.project-card a:hover {
+    text-decoration: underline;
+}
+.ongoing-project {
+    border-top: 5px solid #555;
+}
+
+.ongoing-label {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 12px;
+    background-color: #e5e7eb;
+    color: #374151;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+/* Certifications */
+
+.certification-card {
+    background-color: white;
+    padding: 25px 30px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border-left: 5px solid #1f4b7a;
+}
+
+.certification-card h2 {
+    margin-top: 0;
+    color: #1f4b7a;
+}
+
+.certification-card p {
+    margin: 8px 0;
+}
+
+.cert-year {
+    font-weight: bold;
+    color: #555;
+}
+/* Achievements */
+
+.achievement-card {
+    background-color: white;
+    padding: 25px 30px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border-left: 5px solid #1f4b7a;
+}
+
+.achievement-card h2 {
+    margin-top: 0;
+    color: #1f4b7a;
+}
+
+.achievement-card p {
+    font-size: 17px;
+    margin-bottom: 0;
+}
+/* Resume */
+
+.resume-card {
+    background-color: white;
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.resume-card h2 {
+    color: #1f4b7a;
+    font-size: 28px;
+    margin-top: 0;
+}
+
+.resume-card p {
+    font-size: 17px;
+    margin-bottom: 20px;
+}
+/* Contact */
+
+.contact-card {
+    background-color: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.contact-card h2 {
+    color: #1f4b7a;
+    margin-top: 0;
+    font-size: 28px;
+}
+
+.contact-card > p {
+    font-size: 17px;
+    margin-bottom: 30px;
+}
+
+.contact-details p {
+    font-size: 17px;
+    margin: 18px 0;
+}
+
+.contact-details a {
+    color: #1f4b7a;
+    text-decoration: none;
+}
+
+.contact-details a:hover {
+    text-decoration: underline;
+}
+/* Footer */
+
+footer {
+    background-color: #1f2937;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+}
+
+footer p {
+    margin: 0;
+    font-size: 14px;
+}
+/* Mobile Responsive Design */
+
+@media (max-width: 768px) {
+.highlight-grid {
+    grid-template-columns: 1fr;
+}
+
+.home-highlights {
+    padding: 30px 20px;
+}
+    nav {
+        padding: 15px 10px;
+    }
+
+    nav a {
+        display: inline-block;
+        margin: 6px 8px;
+        font-size: 14px;
+    }
+
+    .hero {
+        min-height: 70vh;
+        padding: 30px 20px;
+    }
+
+    .hero h1 {
+        font-size: 42px;
+    }
+
+    .hero h2 {
+        font-size: 21px;
+    }
+
+    .description {
+        font-size: 16px;
+    }
+
+    .page-section {
+        padding: 50px 20px;
+    }
+
+    .page-section h1 {
+        font-size: 36px;
+    }
+
+    .skills-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .project-card,
+    .experience-card,
+    .education-card,
+    .certification-card,
+    .achievement-card,
+    .about-card,
+    .resume-card,
+    .contact-card {
+        padding: 25px;
+    }
+
+}
+/* Home Highlights */
+
+.home-highlights {
+    max-width: 1000px;
+    margin: 20px auto 60px;
+    padding: 40px 25px;
+    text-align: center;
+}
+
+.home-highlights h2 {
+    font-size: 32px;
+    color: #1f4b7a;
+    margin-bottom: 30px;
+}
+
+.highlight-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.highlight-card {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s;
+}
+
+.highlight-card:hover {
+    transform: translateY(-5px);
+}
+
+.highlight-card h3 {
+    color: #1f4b7a;
+    margin-top: 0;
+    font-size: 20px;
+}
+
+.highlight-card p {
+    font-size: 15px;
+    margin-bottom: 0;
+}
