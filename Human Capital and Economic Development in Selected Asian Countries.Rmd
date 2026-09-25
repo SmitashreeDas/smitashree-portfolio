@@ -1,0 +1,455 @@
+---
+title: "Human Capital and Economic Development in Selected Asian Countries"
+author: "Smitashree das"
+date: "2026-09-25"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# 1. Introduction
+
+Economic development is influenced by several social and labour-market factors in addition to income.
+
+This project examines the relationship between GDP per capita and selected human capital indicators across ten Asian countries from 2011 to 2024.
+
+The analysis uses three indicators:
+
+- GDP per capita
+- Life expectancy at birth
+- Youth labour force participation rate (ages 15–24)
+
+The study focuses on country-wise comparisons, trends and relationships between these indicators.
+
+## Research Question
+
+Does higher human capital and youth labour force participation correspond with higher GDP per capita across selected Asian countries?
+
+## Countries Covered
+
+The analysis includes:
+
+- India
+- Bangladesh
+- Nepal
+- Sri Lanka
+- China
+- Japan
+- Korea, Rep.
+- Indonesia
+- Malaysia
+- Thailand
+
+# 2. Data Source
+
+The data are obtained from the World Development Indicators (WDI) database of the World Bank.
+
+The analysis covers the period 2011–2024.
+
+The variables used are:
+
+1. GDP per capita (constant 2015 US$)
+2. Life expectancy at birth, total (years)
+3. Labour force participation rate for ages 15–24, total (%), modeled ILO estimate
+
+# 3. Loading Required Packages
+
+```{r}
+
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+```{r}
+data <- read_excel(
+  "C:\\Users\\Smitashree\\Downloads\\P_Data_Extract_From_World_Development_Indicators.xlsx"
+)
+
+head(data)
+```
+```{r}
+
+data_clean <- data %>%
+  filter(
+    !is.na(`Country Code`),
+    `Series Code` %in% c(
+      "NY.GDP.PCAP.KD",
+      "SP.DYN.LE00.IN",
+      "SL.TLF.ACTI.1524.ZS"
+    )
+  )
+```
+
+```{r}
+
+data_long <- data_clean %>%
+  pivot_longer(
+    cols = matches("^20\\d{2}"),
+    names_to = "Year",
+    values_to = "Value"
+  ) %>%
+  mutate(
+    Year = as.numeric(substr(Year, 1, 4)),
+    Value = as.numeric(Value)
+  )
+
+head(data_long)
+```
+
+```{r}
+
+data_long %>%
+  summarise(
+    Countries = n_distinct(`Country Name`),
+    Years = n_distinct(Year),
+    Indicators = n_distinct(`Series Name`),
+    Observations = n()
+  )
+```
+```{r}
+
+data_long %>%
+  group_by(`Series Name`) %>%
+  summarise(
+    Missing_Values = sum(is.na(Value)),
+    Total_Observations = n()
+  )
+```
+```{r}
+
+ggplot(
+  data_long %>%
+    filter(`Series Code` == "NY.GDP.PCAP.KD"),
+  aes(
+    x = Year,
+    y = Value,
+    color = `Country Name`
+  )
+) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_color_viridis_d(option = "turbo") +
+  labs(
+    title = "GDP per Capita Trends Across Selected Asian Countries",
+    x = "Year",
+    y = "GDP per Capita (constant 2015 US$)",
+    color = "Country"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
+```
+##GDP per capita generally increased across most of the selected Asian countries from 2011 to 2024. Japan and Korea, Rep. remained at the highest level  while Nepal and Bangladesh were among the lower levels.
+```{r}
+
+ggplot(
+  data_long %>%
+    filter(`Series Code` == "SP.DYN.LE00.IN"),
+  aes(
+    x = Year,
+    y = Value,
+    color = `Country Name`
+  )
+) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_color_viridis_d(option = "turbo") +
+  labs(
+    title = "Life Expectancy Trends Across Selected Asian Countries",
+    x = "Year",
+    y = "Life Expectancy (Years)",
+    color = "Country"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold")
+  )
+```
+##Life expectancy was relatively stable or gradually increased in most countries. Japan had the highest life expectancy, while Nepal had the lowest among the selected countries. A noticeable fall can also be seen around 2020–2021 for some countries.
+```{r}
+
+ggplot(
+  data_long %>%
+    filter(`Series Code` == "SL.TLF.ACTI.1524.ZS"),
+  aes(
+    x = Year,
+    y = Value,
+    color = `Country Name`
+  )
+) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_color_viridis_d(option = "turbo") +
+  labs(
+    title = "Youth Labour Force Participation Across Selected Asian Countries",
+    x = "Year",
+    y = "Labour Force Participation (%)",
+    color = "Country"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold")
+  )
+```
+## Youth labour force participation varied across countries and changed differently over time. China had relatively high participation, while Korea, Rep. had the lowest average participation among the selected countries.
+```{r}
+
+average_gdp <- data_long %>%
+  filter(`Series Code` == "NY.GDP.PCAP.KD") %>%
+  group_by(`Country Name`) %>%
+  summarise(
+    Average_GDP_per_Capita = mean(Value, na.rm = TRUE)
+  ) %>%
+  arrange(desc(Average_GDP_per_Capita))
+
+average_gdp
+```
+```{r}
+
+ggplot(
+  average_gdp,
+  aes(
+    x = reorder(`Country Name`, Average_GDP_per_Capita),
+    y = Average_GDP_per_Capita,
+    fill = `Country Name`
+  )
+) +
+  geom_col(width = 0.7) +
+  coord_flip() +
+  scale_fill_viridis_d(option = "turbo") +
+  labs(
+    title = "Average GDP per Capita, 2011–2024",
+    x = "Country",
+    y = "Average GDP per Capita (constant 2015 US$)",
+    fill = "Country"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "none"
+  )
+```
+##Japan had the highest average GDP per capita, followed by Korea, Rep. Nepal had the lowest average GDP per capita among the selected countries.
+```{r}
+
+average_life <- data_long %>%
+  filter(`Series Code` == "SP.DYN.LE00.IN") %>%
+  group_by(`Country Name`) %>%
+  summarise(
+    Average_Life_Expectancy = mean(Value, na.rm = TRUE)
+  ) %>%
+  arrange(desc(Average_Life_Expectancy))
+
+average_life
+```
+```{r}
+
+ggplot(
+  average_life,
+  aes(
+    x = reorder(`Country Name`, Average_Life_Expectancy),
+    y = Average_Life_Expectancy,
+    fill = `Country Name`
+  )
+) +
+  geom_col(width = 0.7) +
+  coord_flip() +
+  scale_fill_viridis_d(option = "turbo") +
+  labs(
+    title = "Average Life Expectancy, 2011–2024",
+    x = "Country",
+    y = "Average Life Expectancy (Years)",
+    fill = "Country"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "none"
+  )
+```
+##Japan had the highest average life expectancy, at around 84 years. Nepal had the lowest, at around 69 years. The other countries were mostly between these two levels.
+
+```{r}
+
+average_youth_labor <- data_long %>%
+  filter(`Series Code` == "SL.TLF.ACTI.1524.ZS") %>%
+  group_by(`Country Name`) %>%
+  summarise(
+    Average_Youth_LFPR = mean(Value, na.rm = TRUE)
+  ) %>%
+  arrange(desc(Average_Youth_LFPR))
+
+average_youth_labor
+```
+```{r}
+
+ggplot(
+  average_youth_labor,
+  aes(
+    x = reorder(`Country Name`, Average_Youth_LFPR),
+    y = Average_Youth_LFPR,
+    fill = `Country Name`
+  )
+) +
+  geom_col(width = 0.7) +
+  coord_flip() +
+  scale_fill_viridis_d(option = "turbo") +
+  labs(
+    title = "Average Youth Labour Force Participation, 2011–2024",
+    x = "Country",
+    y = "Labour Force Participation (%)",
+    fill = "Country"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "none"
+  )
+```
+##China had the highest average youth labour force participation, while Korea, Rep. had the lowest. The differences show that youth participation in the labour market varies considerably across the countries.
+```{r}
+
+country_summary <- data_long %>%
+  group_by(`Country Name`, `Series Code`) %>%
+  summarise(
+    Average_Value = mean(Value, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = `Series Code`,
+    values_from = Average_Value
+  ) %>%
+  rename(
+    GDP_per_Capita = `NY.GDP.PCAP.KD`,
+    Life_Expectancy = `SP.DYN.LE00.IN`,
+    Youth_LFPR = `SL.TLF.ACTI.1524.ZS`
+  )
+
+country_summary
+```
+```{r}
+
+ggplot(
+  country_summary,
+  aes(
+    x = Life_Expectancy,
+    y = GDP_per_Capita,
+    color = `Country Name`
+  )
+) +
+  geom_point(size = 4) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    color = "black",
+    linewidth = 1
+  ) +
+  scale_color_viridis_d(option = "turbo") +
+  labs(
+    title = "GDP per Capita and Life Expectancy",
+    x = "Average Life Expectancy (Years)",
+    y = "Average GDP per Capita (constant 2015 US$)",
+    color = "Country"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold")
+  )
+```
+##The graph shows a clear positive relationship between life expectancy and GDP per capita. Countries with higher life expectancy generally also had higher GDP per capita. The correlation of 0.89 supports this strong positive relationship.
+```{r}
+
+ggplot(
+  country_summary,
+  aes(
+    x = Youth_LFPR,
+    y = GDP_per_Capita,
+    color = `Country Name`
+  )
+) +
+  geom_point(size = 4) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    color = "black",
+    linewidth = 1
+  ) +
+  scale_color_viridis_d(option = "turbo") +
+  labs(
+    title = "GDP per Capita and Youth Labour Force Participation",
+    x = "Average Youth Labour Force Participation (%)",
+    y = "Average GDP per Capita (constant 2015 US$)",
+    color = "Country"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold")
+  )
+```
+##The graph does not show a clear relationship between youth labour force participation and GDP per capita. This is also supported by the correlation of -0.01, which is very close to zero.
+```{r}
+
+correlation_results <- country_summary %>%
+  select(
+    GDP_per_Capita,
+    Life_Expectancy,
+    Youth_LFPR
+  ) %>%
+  cor(
+    use = "complete.obs"
+  )
+
+round(correlation_results, 2)
+```
+##GDP per capita and life expectancy have a strong positive correlation of 0.89. This means countries with higher GDP per capita generally have higher life expectancy.
+
+The correlation between GDP per capita and youth labour force participation is -0.01, showing almost no linear relationship in this dataset.
+
+Life expectancy and youth labour force participation also have a very weak correlation of 0.08.
+```{r}
+
+model <- lm(
+  GDP_per_Capita ~ Life_Expectancy + Youth_LFPR,
+  data = country_summary
+)
+
+summary(model)
+```
+##Life expectancy has a positive and statistically significant relationship with GDP per capita in the model. Its p-value is 0.00111.
+
+Youth labour force participation has a negative coefficient, but its p-value of 0.63588 shows that its relationship with GDP per capita is not statistically significant in this model.
+
+So, in this dataset, life expectancy is more strongly associated with GDP per capita than youth labour force participation.
+
+```{r}
+
+regression_results <- data.frame(
+  Variable = names(coef(model)),
+  Coefficient = coef(model)
+)
+
+regression_results
+```
+
+#Findings
+GDP per capita generally increased across the selected Asian countries from 2011 to 2024.
+
+Japan had the highest average GDP per capita and life expectancy among the selected countries.
+
+Youth labour force participation showed considerable differences between countries.
+
+GDP per capita had a strong positive correlation with life expectancy (0.89).
+
+GDP per capita had almost no correlation with youth labour force participation (-0.01).
+
+The regression results show that life expectancy had a significant positive relationship with GDP per capita, while youth labour force participation was not statistically significant.
+
+#Conclusion
+This study examined GDP per capita, life expectancy and youth labour force participation across ten selected Asian countries from 2011 to 2024. The results show a strong positive relationship between GDP per capita and life expectancy. However, youth labour force participation did not show a clear relationship with GDP per capita. Overall, the analysis highlights differences in economic and social indicators across the selected Asian countries.

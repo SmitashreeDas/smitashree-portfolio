@@ -1,0 +1,606 @@
+---
+title: "Economic Growth and Environmental Sustainability in Selected OECD Countries"
+author: "Smitashree Das"
+date: "25/09/2026"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+library(knitr)
+```
+
+# Introduction
+
+Economic growth is important for improving income and living standards, but it can also put pressure on the environment. This project studies selected OECD countries from 2011 to 2023 to understand how economic growth and environmental conditions have changed over time.
+
+GDP per capita is used to represent economic performance, while CO2 emissions per capita and forest area are used as environmental indicators. The project compares countries, studies their trends and examines whether economic growth has taken place along with lower environmental pressure.
+
+# Research Question
+
+How have economic growth, CO2 emissions and forest area changed across selected OECD countries from 2011 to 2023, and what relationship can be observed between economic growth and environmental indicators?
+
+# Data Source
+
+The data are taken from the World Bank World Development Indicators (WDI) database.
+
+The selected countries are Australia, Canada, France, Germany, Italy, Japan, South Korea, Spain, United Kingdom and United States.
+
+The period of analysis is 2011 to 2023.
+
+# Indicators
+
+Three indicators are used:
+
+1. **GDP per capita (constant 2015 US$)**  
+   Code: `NY.GDP.PCAP.KD`  
+   It represents the economic output per person after adjusting for price changes.
+
+2. **Carbon dioxide (CO2) emissions excluding LULUCF per capita**  
+   Code: `EN.GHG.CO2.PC.CE.AR5`  
+   It represents the amount of CO2 emissions produced per person.
+
+3. **Forest area (% of land area)**  
+   Code: `AG.LND.FRST.ZS`  
+   It represents the percentage of a country's land covered by forests.
+
+# Data Import
+
+```{r import}
+data <- read_excel(
+  "C:\\Users\\Smitashree\\Downloads\\P_Data_Extract_From_World_Development_Indicators (1).xlsx",
+  sheet = "Data"
+)
+
+head(data)
+```
+
+# Data Cleaning
+
+The original World Bank data are in wide format, where each year is stored in a separate column. The data are converted into long format for easier analysis.
+
+```{r cleaning}
+countries <- c(
+  "Australia",
+  "Canada",
+  "France",
+  "Germany",
+  "Italy",
+  "Japan",
+  "Korea, Rep.",
+  "Spain",
+  "United Kingdom",
+  "United States"
+)
+
+data_long <- data %>%
+  filter(`Country Name` %in% countries) %>%
+  pivot_longer(
+    cols = matches("^20"),
+    names_to = "Year",
+    values_to = "Value"
+  ) %>%
+  mutate(
+    Year = as.numeric(substr(Year, 1, 4)),
+    Value = as.numeric(Value)
+  ) %>%
+  filter(Year >= 2011 & Year <= 2023)
+
+head(data_long)
+```
+
+Now the three indicators are placed into separate columns.
+
+```{r reshape}
+data_clean <- data_long %>%
+  select(`Country Name`, Year, `Series Code`, Value) %>%
+  pivot_wider(
+    names_from = `Series Code`,
+    values_from = Value
+  ) %>%
+  rename(
+    Country = `Country Name`,
+    GDP = NY.GDP.PCAP.KD,
+    CO2 = EN.GHG.CO2.PC.CE.AR5,
+    Forest = AG.LND.FRST.ZS
+  )
+
+head(data_clean)
+```
+
+# Missing Value Check
+
+Before starting the analysis, missing values are checked.
+
+```{r missing}
+missing_values <- data_clean %>%
+  summarise(
+    GDP_Missing = sum(is.na(GDP)),
+    CO2_Missing = sum(is.na(CO2)),
+    Forest_Missing = sum(is.na(Forest))
+  )
+
+kable(missing_values,
+      caption = "Missing Values in the Dataset")
+```
+
+Missing values are also checked country-wise.
+
+```{r missing-country}
+missing_country <- data_clean %>%
+  group_by(Country) %>%
+  summarise(
+    GDP_Missing = sum(is.na(GDP)),
+    CO2_Missing = sum(is.na(CO2)),
+    Forest_Missing = sum(is.na(Forest)),
+    .groups = "drop"
+  )
+
+kable(missing_country,
+      caption = "Country-wise Missing Values")
+```
+
+# Methodology
+
+The project uses descriptive and quantitative methods to compare economic growth and environmental sustainability across the selected OECD countries.
+
+The analysis includes:
+
+1. Country-wise rankings for the latest year.
+2. Percentage change between 2011 and 2023.
+3. Trend analysis from 2011 to 2023.
+4. Average comparison across countries.
+5. GDP-CO2 decoupling analysis.
+6. Scatter plot analysis.
+7. Pearson correlation.
+8. Simple regression.
+
+The Gini coefficient and Lorenz curve are not used because this project focuses on the relationship between economic growth and environmental change rather than inequality. Decoupling analysis is used instead because it directly compares economic growth with changes in CO2 emissions.
+
+# Analysis
+
+## 1. Country-wise Ranking
+
+First, the countries are compared using their 2023 values.
+
+### GDP per Capita Ranking
+
+```{r gdp-ranking}
+latest <- data_clean %>%
+  filter(Year == 2023)
+
+gdp_rank <- latest %>%
+  arrange(desc(GDP)) %>%
+  select(Country, GDP)
+
+kable(gdp_rank,
+      digits = 2,
+      caption = "GDP per Capita Ranking in 2023")
+```
+
+```{r gdp-ranking-graph}
+ggplot(gdp_rank,
+       aes(x = reorder(Country, GDP),
+           y = GDP,
+           fill = Country)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_y_continuous(labels = comma) +
+  labs(
+    title = "GDP per Capita in 2023",
+    x = "Country",
+    y = "GDP per Capita (Constant 2015 US$)"
+  ) +
+  theme_minimal()
+```
+##
+The graph shows that the **United States had the highest GDP per capita in 2023**, followed by Australia, while Spain had the lowest among the selected countries. The differences may be related to factors such as productivity, economic structure and overall income levels across these countries.
+
+
+### CO2 Emissions Ranking
+
+```{r co2-ranking}
+co2_rank <- latest %>%
+  arrange(CO2) %>%
+  select(Country, CO2)
+
+kable(co2_rank,
+      digits = 2,
+      caption = "CO2 Emissions per Capita Ranking in 2023")
+```
+
+```{r co2-ranking-graph}
+ggplot(latest,
+       aes(x = reorder(Country, CO2),
+           y = CO2,
+           fill = Country)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "CO2 Emissions per Capita in 2023",
+    x = "Country",
+    y = "CO2 Emissions per Capita"
+  ) +
+  theme_minimal()
+```
+##In 2023, per capita CO₂ emissions were much higher in Canada and Australia compared to countries like France, the UK and Spain. One possible reason is that energy and transport needs, along with dependence on fossil fuels, differ considerably across these countries.
+
+### Forest Area Ranking
+
+```{r forest-ranking}
+forest_rank <- latest %>%
+  arrange(desc(Forest)) %>%
+  select(Country, Forest)
+
+kable(forest_rank,
+      digits = 2,
+      caption = "Forest Area Ranking in 2023")
+```
+
+```{r forest-ranking-graph}
+ggplot(latest,
+       aes(x = reorder(Country, Forest),
+           y = Forest,
+           fill = Country)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "Forest Area in 2023",
+    x = "Country",
+    y = "Forest Area (% of Land Area)"
+  ) +
+  theme_minimal()
+```
+##Japan has the highest forest coverage in 2023, with South Korea also showing a high share. In contrast, forest land forms a relatively small part of the UK and Australia. Geography and long-term patterns of land use can play an important role in these figures.
+
+# 2. Percentage Change from 2011 to 2023
+
+```{r percentage-change}
+change_data <- data_clean %>%
+  filter(Year %in% c(2011, 2023)) %>%
+  select(Country, Year, GDP, CO2, Forest) %>%
+  pivot_wider(
+    names_from = Year,
+    values_from = c(GDP, CO2, Forest),
+    names_sep = "_"
+  ) %>%
+  mutate(
+    GDP_Change =
+      ((GDP_2023 - GDP_2011) / GDP_2011) * 100,
+
+    CO2_Change =
+      ((CO2_2023 - CO2_2011) / CO2_2011) * 100,
+
+    Forest_Change =
+      ((Forest_2023 - Forest_2011) / Forest_2011) * 100
+  )
+
+change_table <- change_data %>%
+  select(Country, GDP_Change, CO2_Change, Forest_Change)
+
+kable(change_table,
+      digits = 2,
+      caption = "Percentage Change from 2011 to 2023")
+```
+
+### GDP and CO2 Change Comparison
+
+```{r change-graph}
+change_graph <- change_table %>%
+  select(Country, GDP_Change, CO2_Change) %>%
+  pivot_longer(
+    cols = c(GDP_Change, CO2_Change),
+    names_to = "Indicator",
+    values_to = "Percentage_Change"
+  ) %>%
+  mutate(
+    Indicator = recode(
+      Indicator,
+      GDP_Change = "GDP per Capita",
+      CO2_Change = "CO2 per Capita"
+    )
+  )
+
+ggplot(change_graph,
+       aes(x = Country,
+           y = Percentage_Change,
+           fill = Indicator)) +
+  geom_col(position = "dodge") +
+  geom_hline(yintercept = 0,
+             linetype = "dashed") +
+  coord_flip() +
+  labs(
+    title = "Percentage Change in GDP and CO2, 2011–2023",
+    x = "Country",
+    y = "Percentage Change (%)",
+    fill = "Indicator"
+  ) +
+  theme_minimal()
+```
+##Between 2011 and 2023, GDP per capita grew across the selected countries, while CO₂ emissions per capita declined. South Korea recorded particularly strong GDP growth, whereas the UK showed the largest reduction in CO₂ emissions. This pattern shows that higher economic output did not always go together with higher per-person emissions during this period.
+
+# 3. Country-wise Trend Analysis
+
+## GDP per Capita Trend
+
+```{r gdp-trend}
+ggplot(data_clean,
+       aes(x = Year,
+           y = GDP,
+           color = Country)) +
+  geom_line(linewidth = 1) +
+  scale_y_continuous(labels = comma) +
+  labs(
+    title = "GDP per Capita Trend, 2011–2023",
+    x = "Year",
+    y = "GDP per Capita (Constant 2015 US$)",
+    color = "Country"
+  ) +
+  theme_minimal()
+```
+##GDP per capita generally increased across the countries from 2011 to 2023. A clear drop can be seen around 2020 which was the Covid period, followed by a recovery in the following years. The United States remained at the highest level, while Spain stayed at the lower end throughout the period.
+
+## CO2 Emissions Trend
+
+```{r co2-trend}
+ggplot(data_clean,
+       aes(x = Year,
+           y = CO2,
+           color = Country)) +
+  geom_line(linewidth = 1) +
+  labs(
+    title = "CO2 Emissions per Capita Trend, 2011–2023",
+    x = "Year",
+    y = "CO2 Emissions per Capita",
+    color = "Country"
+  ) +
+  theme_minimal()
+```
+##CO₂ emissions per capita show a general downward trend from 2011 to 2023 across the selected countries. Australia, Canada and the United States remained among the higher emitters, even though their emissions declined over time. A noticeable fall around 2020 is also visible in several countries.
+
+## Forest Area Trend
+
+```{r forest-trend}
+ggplot(data_clean,
+       aes(x = Year,
+           y = Forest,
+           color = Country)) +
+  geom_line(linewidth = 1) +
+  labs(
+    title = "Forest Area Trend, 2011–2023",
+    x = "Year",
+    y = "Forest Area (% of Land Area)",
+    color = "Country"
+  ) +
+  theme_minimal()
+```
+##Forest area remained fairly stable in most countries between 2011 and 2023, with only small changes over time. Japan maintained the highest forest coverage, while the UK remained the lowest. South Korea shows a slight decline, whereas countries such as France and Italy show small increases.
+
+# 4. Average Comparison Across Countries
+
+The average values between 2011 and 2023 are calculated for each country.
+
+```{r averages}
+country_average <- data_clean %>%
+  group_by(Country) %>%
+  summarise(
+    Average_GDP = mean(GDP, na.rm = TRUE),
+    Average_CO2 = mean(CO2, na.rm = TRUE),
+    Average_Forest = mean(Forest, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+kable(country_average,
+      digits = 2,
+      caption = "Average Values from 2011 to 2023")
+```
+
+# 5. GDP-CO2 Decoupling Analysis
+
+Decoupling analysis compares economic growth with changes in CO2 emissions.
+
+If GDP per capita increases while CO2 emissions per capita decrease, economic growth and emissions have moved in opposite directions during the period.
+
+```{r decoupling}
+decoupling <- change_data %>%
+  mutate(
+    Decoupling_Elasticity =
+      CO2_Change / GDP_Change,
+
+    Status = case_when(
+
+      GDP_Change > 0 & CO2_Change < 0 ~
+        "GDP increased, CO2 decreased",
+
+      GDP_Change > 0 &
+        CO2_Change >= 0 &
+        CO2_Change < GDP_Change ~
+        "Both increased, CO2 slower",
+
+      GDP_Change > 0 &
+        CO2_Change >= GDP_Change ~
+        "CO2 increased as fast/faster",
+
+      GDP_Change <= 0 &
+        CO2_Change < 0 ~
+        "GDP and CO2 decreased",
+
+      TRUE ~ "Other pattern"
+    )
+  ) %>%
+  select(
+    Country,
+    GDP_Change,
+    CO2_Change,
+    Decoupling_Elasticity,
+    Status
+  )
+
+kable(decoupling,
+      digits = 2,
+      caption = "GDP-CO2 Decoupling Analysis")
+```
+
+### Decoupling Graph
+
+```{r decoupling-graph}
+ggplot(decoupling,
+       aes(x = GDP_Change,
+           y = CO2_Change,
+           label = Country)) +
+
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed"
+  ) +
+
+  geom_vline(
+    xintercept = 0,
+    linetype = "dashed"
+  ) +
+
+  geom_point(
+    size = 3
+  ) +
+
+  geom_text(
+    nudge_y = 1.5,
+    size = 3,
+    check_overlap = TRUE
+  ) +
+
+  labs(
+    title = "Economic Growth and CO2 Change, 2011–2023",
+    subtitle = "GDP per capita change compared with CO2 emissions change",
+    x = "GDP per Capita Change (%)",
+    y = "CO2 per Capita Change (%)"
+  ) +
+
+  theme_minimal()
+```
+##This graph gives a clear picture of decoupling: GDP per capita increased in all the selected countries, while CO₂ emissions per capita decreased between 2011 and 2023. South Korea recorded the strongest GDP growth, while the UK achieved the largest reduction in CO₂ emissions. This shows that economic growth during this period was possible without a rise in per-person CO₂ emissions.
+
+# 6. Relationship Between GDP and CO2
+
+```{r gdp-co2-scatter}
+ggplot(data_clean,
+       aes(x = GDP,
+           y = CO2,
+           color = Country)) +
+
+  geom_point(
+    size = 2,
+    alpha = 0.7
+  ) +
+
+  geom_smooth(
+    aes(group = 1),
+    method = "lm",
+    se = FALSE,
+    color = "black",
+    linetype = "dashed"
+  ) +
+
+  scale_x_continuous(labels = comma) +
+
+  labs(
+    title = "GDP per Capita and CO2 Emissions",
+    subtitle = "Each point represents a country-year observation",
+    x = "GDP per Capita (Constant 2015 US$)",
+    y = "CO2 Emissions per Capita",
+    color = "Country"
+  ) +
+
+  theme_minimal()
+```
+##The scatter plot shows an overall positive association between GDP per capita and CO₂ emissions, as shown by the upward-sloping trend line. However, the country clusters show that this pattern is not the same everywhere ,some countries increased their GDP over time while their emissions declined. This suggests that income level alone does not explain a country’s CO₂ emissions
+
+# 7. Relationship Between GDP and Forest Area
+
+```{r gdp-forest}
+ggplot(data_clean,
+       aes(x = GDP,
+           y = Forest,
+           color = Country)) +
+
+  geom_point(
+    size = 2,
+    alpha = 0.7
+  ) +
+
+  scale_x_continuous(labels = comma) +
+
+  labs(
+    title = "GDP per Capita and Forest Area",
+    subtitle = "Each point represents a country-year observation",
+    x = "GDP per Capita (Constant 2015 US$)",
+    y = "Forest Area (% of Land Area)",
+    color = "Country"
+  ) +
+
+  theme_minimal()
+```
+##There does not seem to be a clear relationship between GDP per capita and forest area. Countries with similar income levels can have very different levels of forest coverage. This suggests that forest area is more closely connected to factors such as geography and land use than simply to the level of economic development.
+
+# 8. Correlation Analysis
+
+Pearson correlation is used to examine the strength and direction of association between the three variables.
+
+```{r correlation}
+correlation_matrix <- data_clean %>%
+  select(GDP, CO2, Forest) %>%
+  cor(
+    use = "complete.obs",
+    method = "pearson"
+  )
+
+round(correlation_matrix, 3)
+```
+
+A positive value indicates that two variables generally move in the same direction, while a negative value indicates that they generally move in opposite directions. Correlation does not show causation.
+
+Here ,correlation results show a moderate positive relationship between GDP per capita and CO₂ emissions (0.626). GDP and forest area have a moderate negative correlation (-0.485), while CO₂ emissions and forest area have almost no relationship (0.089). These values only show how the variables are associated and do not mean that one causes the other.
+
+# 9. Simple Regression Analysis
+
+A simple linear regression is used to examine the association between GDP per capita and CO2 emissions per capita.
+
+```{r regression}
+model <- lm(
+  CO2 ~ GDP,
+  data = data_clean
+)
+
+summary(model)
+```
+##The regression shows a positive and statistically significant association between GDP per capita and CO₂ emissions (p < 0.001). The R² value of 0.392 means GDP per capita explains about 39.2% of the variation in CO₂ emissions in this dataset. However, this result shows an association only and does not mean that higher GDP causes higher emissions.
+
+The GDP coefficient shows the estimated association between GDP per capita and CO2 emissions in the selected observations. The regression does not prove that changes in GDP cause changes in CO2 emissions.
+
+# Findings
+
+The analysis shows that GDP per capita increased across all the selected OECD countries between 2011 and 2023, although the level of growth was not the same everywhere. South Korea recorded the strongest increase, while the United States had the highest GDP per capita in 2023.
+
+At the same time, CO₂ emissions per capita declined across the selected countries. The UK recorded the largest reduction, while Canada and Australia still had relatively high emissions per person in 2023. The decoupling analysis therefore shows an important pattern: economic growth took place along with falling per-capita CO₂ emissions during the period.
+
+Forest area remained mostly stable, with only small changes in most countries. Japan and South Korea had the highest forest coverage, while the UK and Australia had much lower shares.
+
+The correlation between GDP per capita and CO₂ emissions was moderately positive (0.626). The regression also found a significant positive association, with the model explaining around 39.2% of the variation in CO₂ emissions in the pooled data. However, these results show association rather than causation, and the country trends show that GDP can rise even when emissions are falling over time.
+
+# Conclusion
+
+The study shows that economic growth does not necessarily require increasing CO₂ emissions. The selected OECD countries experienced economic growth along with declining per-capita emissions, while forest area showed relatively little change. Overall, the results suggest that economic and environmental performance can move differently over time.
+
+# Limitations
+
+The project covers only 10 selected OECD countries and uses three indicators. Environmental sustainability is much broader than CO2 emissions and forest area, so these variables cannot represent every environmental issue.
+
+The statistical relationships found through correlation and regression represent associations and should not be interpreted as causal relationships.
