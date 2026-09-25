@@ -1,0 +1,411 @@
+---
+title: "GDP Per Capita Analysis of SAARC Countries"
+author: "Smitashree das"
+date: "2026-09-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This analysis examines the changes in GDP Per capita across SAARC countries using World Development Indicators data.The analysis compares the distribution
+of GDP per capita between an earlier baseline period and a later period using
+the 30th and 70th percentile as reference thresholds.
+
+```{r}
+# Load required packages
+
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+```{r import-data}
+
+# Import World Development Indicators data
+
+gdp_data <- read_excel(
+ "C:\\Users\\Smitashree\\Downloads\\P_Data_Extract_From_World_Development_Indicators.xlsx",
+  sheet = "Data",
+  col_types = "text"
+)
+
+# View the first few rows
+head(gdp_data)
+```
+
+```{r inspect-data}
+
+# Check column names
+
+names(gdp_data)
+
+# Check structure
+
+str(gdp_data)
+
+# Display first few observations
+
+head(gdp_data)
+
+```
+
+## Data Preparation
+### Converting the data into long format
+```{r convert-data}
+
+# Convert the data from wide format to long format
+gdp_long <- gdp_data %>%
+  pivot_longer(
+    cols = 5:38,
+    names_to = "Year",
+    values_to = "GDP_per_capita"
+  )
+
+head(gdp_long)
+
+```
+```{r clean-data}
+
+# Clean the year and GDP per capita columns
+
+gdp_long <- gdp_long %>%
+  mutate(
+    Year = as.numeric(sub(" .*", "", Year)),
+    GDP_per_capita = na_if(GDP_per_capita, ".."),
+    GDP_per_capita = as.numeric(GDP_per_capita)
+  )
+
+head(gdp_long)
+```
+
+```{r keep-countries}
+
+gdp_long <- gdp_long %>%
+  filter(`Country Name` %in% c(
+    "Afghanistan",
+    "Bangladesh",
+    "Bhutan",
+    "India",
+    "Maldives",
+    "Nepal",
+    "Pakistan",
+    "Sri Lanka"
+  ))
+
+dim(gdp_long)
+```
+
+### Step 2 — Check the data
+
+```{r check-data}
+
+str(gdp_long)
+unique(gdp_long$`Country Name`)
+gdp_long %>%
+  group_by(.data[["Country Name"]]) %>%
+  summarise(
+    Missing = sum(is.na(GDP_per_capita))
+  )
+```
+## 
+The dataset contains GDP per capita for 8 SAARC countries from 1991 to 2024. The data was divided into two equal periods: 1991–2007 and 2008–2024. Afghanistan has some missing observations in the earlier period, while all countries have complete data in the later period.
+```{r}
+gdp_long <- gdp_long %>%
+  mutate(
+    Period = ifelse(Year <= 2007, "1991-2007", "2008-2024")
+  )
+
+table(gdp_long$Period)
+```
+##
+The data is divided equally into two periods, with 1991–2007 representing the baseline period and 2008–2024 representing the later period.
+
+```{r}
+early_data <- gdp_long %>%
+  filter(Period == "1991-2007")
+
+p30 <- quantile(
+  early_data$GDP_per_capita,
+  0.30,
+  na.rm = TRUE
+)
+
+p70 <- quantile(
+  early_data$GDP_per_capita,
+  0.70,
+  na.rm = TRUE
+)
+
+p30
+p70
+```
+##
+The baseline P30 is US$620.67 and P70 is US$1,449.57. These values are used as reference thresholds to compare GDP per capita in the later period.
+
+```{r}
+later_data <- gdp_long %>%
+  filter(Period == "2008-2024")
+```
+
+```{r}
+below_30 <- mean(
+  later_data$GDP_per_capita < p30,
+  na.rm = TRUE
+)
+
+above_70 <- mean(
+  later_data$GDP_per_capita > p70,
+  na.rm = TRUE
+)
+
+below_30
+above_70
+```
+##
+In 2008–2024, 12.5% of the observations were below P30, while 57.35% were above P70. This indicates an overall shift towards higher GDP per capita compared with the baseline period.
+
+```{r country-percentile}
+country_percentile <- later_data %>%
+  group_by(.data[["Country Name"]]) %>%
+  summarise(
+    Below_30 = mean(GDP_per_capita < p30, na.rm = TRUE),
+    Above_70 = mean(GDP_per_capita > p70, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+country_percentile
+```
+```{r check-country-columns}
+names(country_percentile)
+```
+```{r country-percentile-clean}
+country_percentile %>%
+  mutate(
+    Below_30 = round(Below_30 * 100, 2),
+    Above_70 = round(Above_70 * 100, 2)
+  )
+```
+##
+The country-wise results show clear differences. Afghanistan remained below P30 throughout the later period, while Bhutan, Maldives and Sri Lanka remained above P70. India, Pakistan and Bangladesh were above P70 for a substantial share of the period, whereas Nepal remained between the two thresholds.
+
+```{r country-observations}
+country_observations <- later_data %>%
+  group_by(.data[["Country Name"]]) %>%
+  summarise(
+    Total_Years = n(),
+    Available_Years = sum(!is.na(GDP_per_capita)),
+    Missing_Years = sum(is.na(GDP_per_capita)),
+    .groups = "drop"
+  )
+
+country_observations
+```
+
+```{r period-summary}
+period_summary <- gdp_long %>%
+  group_by(Period) %>%
+  summarise(
+    Mean_GDP_per_capita = mean(GDP_per_capita, na.rm = TRUE),
+    Median_GDP_per_capita = median(GDP_per_capita, na.rm = TRUE),
+    Standard_Deviation = sd(GDP_per_capita, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+period_summary
+```
+##
+Both the mean and median GDP per capita increased in the later period. The higher standard deviation also indicates greater variation across the SAARC country-year observations.
+```{r gdp-trend}
+ggplot(
+  gdp_long,
+  aes(
+    x = Year,
+    y = GDP_per_capita,
+    colour = .data[["Country Name"]]
+  )
+) +
+  geom_line() +
+  labs(
+    title = "GDP per Capita in SAARC Countries",
+    x = "Year",
+    y = "GDP per capita (constant 2015 US$)",
+    colour = "Country"
+  ) +
+  theme_minimal()
+```
+##
+The graph shows a general upward trend in GDP per capita across the SAARC countries. Maldives remains at the highest level, while Afghanistan remains at the lowest, with noticeable differences in the growth patterns across countries.
+
+```{r percentile-thresholds}
+ggplot(
+  gdp_long,
+  aes(
+    x = Year,
+    y = GDP_per_capita,
+    colour = .data[["Country Name"]]
+  )
+) +
+  geom_line() +
+  geom_hline(
+    yintercept = p30,
+    linetype = "dashed"
+  ) +
+  geom_hline(
+    yintercept = p70,
+    linetype = "dashed"
+  ) +
+  labs(
+    title = "GDP per Capita with P30 and P70 Thresholds",
+    x = "Year",
+    y = "GDP per capita (constant 2015 US$)",
+    colour = "Country"
+  ) +
+  theme_minimal()
+```
+##
+The graph supports the percentile results, with Afghanistan remaining below P30 and Bhutan, Maldives and Sri Lanka mostly above P70 during the later period. India also moves above P70 during the later years.
+```{r country-summary}
+country_summary <- gdp_long %>%
+  group_by(.data[["Country Name"]]) %>%
+  summarise(
+    Mean_GDP_per_capita = mean(GDP_per_capita, na.rm = TRUE),
+    Median_GDP_per_capita = median(GDP_per_capita, na.rm = TRUE),
+    Standard_Deviation = sd(GDP_per_capita, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+country_summary
+```
+##
+The results show substantial differences in average GDP per capita across the SAARC countries. Maldives has the highest average, while Afghanistan has the lowest.
+```{r country-mean-graph}
+ggplot(
+  country_summary,
+  aes(
+    x = reorder(.data[["Country Name"]], Mean_GDP_per_capita),
+    y = Mean_GDP_per_capita
+  )
+) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Average GDP per Capita of SAARC Countries",
+    x = "Country",
+    y = "Mean GDP per capita (constant 2015 US$)"
+  ) +
+  theme_minimal()
+```
+##
+The graph clearly shows the difference in average GDP per capita across the countries, with Maldives considerably higher than the other SAARC countries and Afghanistan at the lower end.
+```{r country-period-summary}
+country_period_summary <- gdp_long %>%
+  group_by(.data[["Country Name"]], Period) %>%
+  summarise(
+    Mean_GDP_per_capita = mean(GDP_per_capita, na.rm = TRUE),
+    Median_GDP_per_capita = median(GDP_per_capita, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+country_period_summary
+```
+##
+Mean GDP per capita increased in all eight countries between the two periods. The size of the increase, however, differs across countries.
+```{r country-period-check}
+print(country_period_summary, n = Inf)
+names(country_period_summary)
+```
+```{r percentage-change}
+
+percentage_change <- country_period_summary %>%
+  rename(Country = `Country Name`) %>%
+  select(Country, Period, Mean_GDP_per_capita) %>%
+  pivot_wider(
+    names_from = Period,
+    values_from = Mean_GDP_per_capita
+  )
+
+percentage_change <- percentage_change %>%
+  mutate(
+    Percentage_Change = (`2008-2024` - `1991-2007`) /
+      `1991-2007` * 100
+  )
+
+percentage_change
+
+```
+##
+All eight countries recorded positive changes in mean GDP per capita. Bhutan had the highest increase at 132.24%, while Pakistan had the lowest at 33.80%.
+```{r percentage-change-graph}
+
+ggplot(
+  percentage_change,
+  aes(
+    x = reorder(Country, Percentage_Change),
+    y = Percentage_Change
+  )
+) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Percentage Change in Mean GDP per Capita",
+    x = "Country",
+    y = "Percentage Change (%)"
+  ) +
+  theme_minimal()
+
+```
+##
+The graph shows that Bhutan, India and Bangladesh recorded the largest percentage increases, while Pakistan recorded the smallest increase.
+```{r percentile-comparison}
+ggplot(
+  country_percentile %>%
+    pivot_longer(
+      cols = c(Below_30, Above_70),
+      names_to = "Category",
+      values_to = "Proportion"
+    ),
+  aes(
+    x = .data[["Country Name"]],
+    y = Proportion * 100,
+    fill = Category
+  )
+) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "GDP per Capita Relative to Baseline P30 and P70",
+    x = "Country",
+    y = "Percentage of Years (%)",
+    fill = "Category"
+  ) +
+  theme_minimal()
+```
+##
+The graph highlights the differences between countries relative to the baseline thresholds. Afghanistan is entirely below P30, while Bhutan, Maldives and Sri Lanka are entirely above P70 in the later period.
+
+```{r period-boxplot}
+ggplot(
+  gdp_long,
+  aes(
+    x = Period,
+    y = GDP_per_capita
+  )
+) +
+  geom_boxplot() +
+  labs(
+    title = "Distribution of GDP per Capita Across the Two Periods",
+    x = "Period",
+    y = "GDP per capita (constant 2015 US$)"
+  ) +
+  theme_minimal()
+```
+##
+The boxplot shows an upward shift in GDP per capita in the later period. The wider spread also indicates greater variation among the country-year observations.
+
+## Conclusion
+
+The analysis shows an overall increase in GDP per capita across the SAARC countries between 1991–2007 and 2008–2024. The P30 and P70 analysis indicates a shift towards higher GDP per capita in the later period, although the extent of change differs across countries. The country-wise results also show substantial differences in both GDP per capita levels and percentage changes among the SAARC countries.
